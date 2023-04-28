@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            position: relative;
+            background-image: url('https://mdbootstrap.com/img/Photos/Others/images/76.jpg');
+            height: 100vh;
+            min-height: 100vh;
+        }
+        #chat-log {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            width: 30%;
+            height: 70%;
+            resize: none;
+        }
+        #chat-message-input {
+            position: fixed;
+            bottom: 0;
+            right: 20px;
+            width: 30%;
+            height: 50px;
+        }
+        #chat-message-submit {
+            position: fixed;
+            bottom: 0;
+            right: 20px;
+            width: 10%;
+            height: 50px;
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <form  method="post">
+    {% csrf_token %}
+
+    <textarea name="message" id="chat-log"></textarea><br>
+    <input  id="chat-message-input" type="text" placeholder="Type your message...">
+    <button id="chat-message-submit">Send</button>
+    {{ room_name|json_script:"room-name" }}
+    {{ username|json_script:"username" }}
+
+</form>
+
+
+
+    <script>
+        $(document).ready(function() {
+    // Send message to chatbot view
+    function sendMessage(message) {
+        $.ajax({
+            url: 'weather_chatbot/',
+            type: 'POST',
+            data: {
+                'message': message,
+                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val()
+            },
+            dataType: 'json',
+            success: function(response) {
+                // Append chatbot response to chat log
+                var chatLog = $('#chat-log').val();
+                $('#chat-log').val(chatLog + 'You: ' + message + '\n' + 'Bot: ' + response.message + '\n');
+                // Scroll to bottom of chat log
+                $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+                // If the chatbot's response contains weather information, display it in a modal
+                if (response.message.indexOf('Weather information for') === 0) {
+                    $('#weather-modal-body').text(response.message.substring(23));
+                    $('#weather-modal').modal('show');
+                }
+                // If the chatbot's response contains a prompt, display it in the message input field placeholder
+                if (response.message.indexOf('Please enter') === 0) {
+                    $('#chat-message-input').attr('placeholder', response.message);
+                } else {
+                    $('#chat-message-input').attr('placeholder', 'Type your message...');
+                }
+            },
+            error: function() {
+                // Display error message in chat log
+                $('#chat-log').val($('#chat-log').val() + 'Error: Failed to send message\n');
+                // Clear message input field
+                $('#chat-message-input').val('');
+                // Scroll to bottom of chat log
+                $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
+            }
+        });
+        return false;
+    }
+
+    // Send message to chatbot view when "Send" button is clicked or Enter key is pressed in message input field
+    $('#chat-message-submit, #chat-message-input').on('click keypress', function(e) {
+        if (e.type === 'click' || (e.type === 'keypress' && e.which === 13)) {
+            e.preventDefault(); // Prevent form submission
+            var message = $('#chat-message-input').val().trim();
+            if (message !== '') {
+                sendMessage(message);
+                $('#chat-message-input').val('');  // Clear the message input field
+            }
+        }
+    });
+
+
+});
+
+
+
+
+    </script>
+
+
+</body>
+</html>
