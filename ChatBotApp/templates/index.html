@@ -56,7 +56,7 @@
     <input  id="chat-message-input" type="text" placeholder="Type your message...">
     <button id="chat-message-submit">Send</button>
     {{ room_name|json_script:"room-name" }}
-    {{ username|json_script:"username" }}
+
 
 </form>
 
@@ -64,6 +64,8 @@
 
     <script>
         $(document).ready(function() {
+            $('#chat-log').val('Bot: ' + 'Welcome to the weather information chatbot! Please enter your country\n');
+
     // Send message to chatbot view
     function sendMessage(message) {
         $.ajax({
